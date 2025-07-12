@@ -1,0 +1,10 @@
+contains_device_types	0
+contains_manufacturers	1
+contains_models	2
+has_manufacturer	3
+has_model	4
+indicates_device	5
+indicates_device_type	6
+indicates_manufacturer	7
+indicates_model	8
+is_type	9

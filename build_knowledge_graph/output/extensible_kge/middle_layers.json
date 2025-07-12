@@ -1,0 +1,18 @@
+{
+  "middle_layers": [
+    "device_types",
+    "manufacturers",
+    "models",
+    "device_manufacturer_combinations",
+    "manufacturer_model_combinations"
+  ],
+  "entity_counts": {
+    "banner_features": 1085,
+    "device_types": 16,
+    "manufacturers": 91,
+    "models": 984,
+    "device_manufacturer_pairs": 0,
+    "manufacturer_model_pairs": 0,
+    "specific_devices": 1049
+  }
+}

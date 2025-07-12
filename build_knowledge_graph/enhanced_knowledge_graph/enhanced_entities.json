@@ -1,0 +1,32 @@
+{
+  "banner_features": [
+    "1.1",
+    "Basic realm=\"Axis Camera\"",
+    "text/html",
+    "Router",
+    "Cisco-IOS",
+    "Axis",
+    "Management",
+    "Hikvision",
+    "Axis-Webs",
+    "Cisco",
+    "Hikvision-Webs",
+    "HTTP",
+    "Camera"
+  ],
+  "device_indicators": [],
+  "device_types": [
+    "camera",
+    "router"
+  ],
+  "manufacturers": [
+    "Hikvision",
+    "Cisco",
+    "Axis"
+  ],
+  "specific_devices": [
+    "camera_Axis",
+    "router_Cisco",
+    "camera_Hikvision"
+  ]
+}
