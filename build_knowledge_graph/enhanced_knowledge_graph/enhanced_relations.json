@@ -1,0 +1,26 @@
+{
+  "relations": [
+    "is_type",
+    "contains_feature",
+    "has_manufacturer",
+    "derived_from",
+    "indicates_manufacturer",
+    "composed_of",
+    "correlates_with",
+    "has_model",
+    "typical_for",
+    "similar_to"
+  ],
+  "descriptions": {
+    "is_type": "设备属于类型",
+    "contains_feature": "banner特征包含关系",
+    "has_manufacturer": "设备有厂商",
+    "derived_from": "来源于",
+    "indicates_manufacturer": "特征指示厂商",
+    "composed_of": "由...组成",
+    "correlates_with": "与...相关",
+    "has_model": "设备有型号",
+    "typical_for": "典型用于设备类型",
+    "similar_to": "设备相似关系"
+  }
+}
