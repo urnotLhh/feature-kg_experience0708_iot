@@ -19,7 +19,7 @@ tf.flags.DEFINE_string("model_dir", "model", "model path")
 tf.flags.DEFINE_float("margin", 1.0, "loss margin")
 tf.flags.DEFINE_string("score_func", "l2", "score function type")
 
-# tf.flags.DEFINE_float("l2_reg", 0.004, "l2 regularization weight [0.004]")
+tf.flags.DEFINE_float("l2_reg", 0.001, "l2 regularization weight [0.001]")
 
 # training params
 tf.flags.DEFINE_integer("batch_size", 32, "train batch size [64]")

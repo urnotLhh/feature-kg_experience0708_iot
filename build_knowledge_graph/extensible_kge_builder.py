@@ -177,41 +177,48 @@ class ExtensibleKGEBuilder:
         # 底层：banner特征
         for feature_list in features.values():
             for feature in feature_list:
-                self.banner_features.add(feature)
-                self.entities.add(feature)
+                if feature:  # 确保特征不为空
+                    self.banner_features.add(feature)
+                    self.entities.add(feature)
         
         # 中层：设备类型
         for device_type in features.get('device_types', []):
-            self.device_types.add(device_type)
-            self.entities.add(device_type)
+            if device_type:  # 确保设备类型不为空
+                self.device_types.add(device_type)
+                self.entities.add(device_type)
         
         # 中层：厂商
         for manufacturer in features.get('manufacturers', []):
-            self.manufacturers.add(manufacturer)
-            self.entities.add(manufacturer)
+            if manufacturer:  # 确保厂商不为空
+                self.manufacturers.add(manufacturer)
+                self.entities.add(manufacturer)
         
         # 中层：型号
         for model in features.get('models', []):
-            self.models.add(model)
-            self.entities.add(model)
+            if model:  # 确保型号不为空
+                self.models.add(model)
+                self.entities.add(model)
         
         # 中层：设备厂商组合
         for combo in features.get('device_manufacturer_combinations', []):
-            self.device_manufacturer_pairs.add(combo)
-            self.entities.add(combo)
+            if combo:  # 确保组合不为空
+                self.device_manufacturer_pairs.add(combo)
+                self.entities.add(combo)
         
         # 中层：厂商型号组合
         for combo in features.get('manufacturer_model_combinations', []):
-            self.manufacturer_model_pairs.add(combo)
-            self.entities.add(combo)
+            if combo:  # 确保组合不为空
+                self.manufacturer_model_pairs.add(combo)
+                self.entities.add(combo)
         
         # 高层：具体设备
         device_entity = f"{device_info['type']}_{device_info['manufacturer']}"
         if device_info['model']:
             device_entity += f"_{device_info['model']}"
         
-        self.specific_devices.add(device_entity)
-        self.entities.add(device_entity)
+        if device_entity:  # 确保设备实体不为空
+            self.specific_devices.add(device_entity)
+            self.entities.add(device_entity)
     
     def _create_enhanced_triples(self, banner_text: str, device_info: Dict, features: Dict[str, List[str]]):
         """创建增强三元组"""
@@ -343,17 +350,43 @@ class ExtensibleKGEBuilder:
             for head, relation, tail in knowledge_graph['triples']:
                 f.write(f"{head}\t{relation}\t{tail}\n")
         
-        # 保存实体词汇表
+        # 保存实体词汇表 - 修复重复实体问题
         entity_vocab_file = os.path.join(output_dir, 'entity.vocab')
+        entities = list(knowledge_graph['entities'])
+        
+        # 去重并保持顺序
+        unique_entities = []
+        seen_entities = set()
+        for entity in sorted(entities):
+            if entity not in seen_entities:
+                unique_entities.append(entity)
+                seen_entities.add(entity)
+        
+        # 检查是否有重复实体
+        if len(unique_entities) != len(entities):
+            print(f"警告: 发现重复实体，已去重")
+            print(f"  原始实体数量: {len(entities)}")
+            print(f"  去重后实体数量: {len(unique_entities)}")
+        
         with open(entity_vocab_file, 'w', encoding='utf-8') as f:
-            for i, entity in enumerate(sorted(knowledge_graph['entities'])):
-                f.write(f"{entity}\t{i}\n")
+            for i, entity in enumerate(unique_entities):
+                f.write(f"{i}\t{entity}\n")
         
         # 保存关系词汇表
         relation_vocab_file = os.path.join(output_dir, 'relation.vocab')
+        relations = list(knowledge_graph['relations'])
+        
+        # 去重并保持顺序
+        unique_relations = []
+        seen_relations = set()
+        for relation in sorted(relations):
+            if relation not in seen_relations:
+                unique_relations.append(relation)
+                seen_relations.add(relation)
+        
         with open(relation_vocab_file, 'w', encoding='utf-8') as f:
-            for i, relation in enumerate(sorted(knowledge_graph['relations'])):
-                f.write(f"{relation}\t{i}\n")
+            for i, relation in enumerate(unique_relations):
+                f.write(f"{i}\t{relation}\n")
         
         # 保存中层特征信息
         middle_layers_file = os.path.join(output_dir, 'middle_layers.json')
@@ -377,6 +410,7 @@ class ExtensibleKGEBuilder:
             json.dump(knowledge_graph, f, ensure_ascii=False, indent=2)
         
         print(f"知识图谱已保存到: {output_dir}")
+        print(f"实体词汇表已去重，确保每个实体编号唯一")
 
 
 def load_training_data_from_files(input_dir: str) -> List[Tuple[str, str]]:

@@ -1,0 +1,127 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "transe-kge"
+dynamic = ["version"]
+description = "TransE Knowledge Graph Embedding for IoT Device Identification"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+maintainers = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+keywords = ["knowledge-graph", "embedding", "transe", "iot", "machine-learning"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "tensorflow==1.15.0",
+    "numpy>=1.16.0,<2.0.0",
+    "pandas>=1.0.0",
+    "scikit-learn>=0.22.0",
+    "jieba>=0.42.1",
+    "matplotlib>=3.0.0",
+    "seaborn>=0.10.0",
+    "tqdm>=4.40.0",
+    "pyyaml>=5.1",
+    "colorlog>=4.0.0",
+    "typing-extensions>=3.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=5.0.0",
+    "pytest-cov>=2.8.0",
+    "black>=19.0.0",
+    "flake8>=3.7.0",
+    "jupyter>=1.0.0",
+    "ipython>=7.0.0",
+]
+docs = [
+    "sphinx>=3.0.0",
+    "sphinx-rtd-theme>=0.5.0",
+]
+
+[project.scripts]
+transe-kge = "transe_kge.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/transe-kge"
+Documentation = "https://github.com/yourusername/transe-kge#readme"
+Repository = "https://github.com/yourusername/transe-kge.git"
+"Bug Tracker" = "https://github.com/yourusername/transe-kge/issues"
+
+[tool.setuptools_scm]
+write_to = "transe_kge/_version.py"
+
+[tool.black]
+line-length = 88
+target-version = ['py37']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = [
+    "tests",
+]
+python_files = [
+    "test_*.py",
+    "*_test.py",
+]
+python_classes = [
+    "Test*",
+]
+python_functions = [
+    "test_*",
+]
+
+[tool.coverage.run]
+source = ["transe_kge"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+] 
