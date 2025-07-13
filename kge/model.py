@@ -56,9 +56,25 @@ class BaseModel(object):
             score_pos = self._score_func(self.h, self.r, self.t)
             score_neg = self._score_func(self.h_neg, self.r, self.t_neg)
             self.predict = score_pos
-            self.loss = tf.reduce_sum(tf.maximum(0.0, self.params.margin + score_pos - score_neg),
+            
+            # 基础损失
+            base_loss = tf.reduce_sum(tf.maximum(0.0, self.params.margin + score_pos - score_neg),
                                       name='max_margin_loss')
-            tf.summary.scalar(name=self.loss.op.name, tensor=self.loss)
+            
+            # L2正则化
+            l2_loss = 0.0
+            if hasattr(self.params, 'l2_reg') and self.params.l2_reg > 0:
+                l2_loss = self.params.l2_reg * tf.add_n([
+                    tf.nn.l2_loss(self.entity_embedding),
+                    tf.nn.l2_loss(self.relation_embedding)
+                ])
+            
+            # 总损失
+            self.loss = base_loss + l2_loss
+            tf.summary.scalar(name='base_loss', tensor=base_loss)
+            tf.summary.scalar(name='l2_loss', tensor=l2_loss)
+            tf.summary.scalar(name='total_loss', tensor=self.loss)
+            
             optimizer = get_optimizer_instance(self.params.optimizer, self.params.learning_rate)
             self.global_step = tf.Variable(initial_value=0, trainable=False, name='global_step')
             self.train_op = optimizer.minimize(self.loss, global_step=self.global_step)
@@ -89,11 +105,12 @@ class BaseModel(object):
     def train(self, sess):
         return sess.run([self.loss, self.train_op, self.merge])
 
-    # def eval(self, sess):
-    #     return sess.run([self.loss, self.pred])
-    #
-    # def predict(self, sess):
-    #     return sess.run([self.pred])
+    def eval(self, sess):
+        """用于验证的评估方法，只计算损失，不更新参数"""
+        return sess.run(self.loss)
+
+    def predict(self, sess):
+        return sess.run([self.pred])
 
     def save(self, sess, path):
         saver = tf.train.Saver()

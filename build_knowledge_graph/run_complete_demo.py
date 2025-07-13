@@ -1,6 +1,85 @@
 #!/usr/bin/env python
 # coding: utf-8
 """
+完整的中层特征扩展和知识图谱构建演示
+包含标签处理、中层特征生成、知识图谱构建的完整流程
+"""
+
+import os
+import sys
+import json
+import subprocess
+from datetime import datetime
+
+def run_command(command: str, description: str) -> bool:
+    """运行命令并显示结果"""
+    print(f"\n{'='*60}")
+    print(f"步骤: {description}")
+    print(f"命令: {command}")
+    print(f"{'='*60}")
+    
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, encoding='utf-8', errors='ignore')
+        
+        if result.stdout:
+            print("输出:")
+            print(result.stdout)
+        
+        if result.stderr:
+            print("错误:")
+            print(result.stderr)
+        
+        if result.returncode == 0:
+            print(f"✅ {description} 完成")
+            return True
+        else:
+            print(f"❌ {description} 失败")
+            return False
+            
+    except Exception as e:
+        print(f"❌ 执行命令时出错: {e}")
+        return False
+
+def check_files_exist():
+    """检查必要文件是否存在"""
+    print("检查必要文件...")
+    
+    # 检查训练数据文件
+    training_data_files = [
+        "input/graph_entities.json",  # 新的JSON格式示例文件
+        "input/banner_and_lables/"    # 旧的文本格式目录
+    ]
+    
+    training_data_exists = False
+    for file_path in training_data_files:
+        if os.path.exists(file_path):
+            training_data_exists = True
+            print(f"✅ 找到训练数据: {file_path}")
+            break
+    
+    if not training_data_exists:
+        print("❌ 没有找到训练数据文件")
+        print("请确保以下文件之一存在:")
+        print("  - input/graph_entities.json (推荐)")
+        print("  - input/banner_and_lables/ (旧格式)")
+        return False
+    
+    # 检查中层特征配置文件
+    config_file = "input_demo/build_middle_feature_result/middle_features_config.json"
+    if not os.path.exists(config_file):
+        print(f"⚠️  中层特征配置文件不存在: {config_file}")
+        print("将自动生成配置文件...")
+    else:
+        print(f"✅ 找到中层特征配置: {config_file}")
+    
+    print("✅ 文件检查完成")
+    return True
+
+def create_demo_script():
+    """创建标签处理脚本"""
+    script_content = '''#!/usr/bin/env python
+# coding: utf-8
+"""
 标签数据处理脚本 - 生成中层特征
 从lable.txt文件中提取设备类型、厂商、型号信息，生成中层特征配置
 """
@@ -8,8 +87,9 @@
 import os
 import json
 import re
+import hashlib
 from collections import defaultdict, Counter
-from typing import Dict, List, Set, Tuple
+from typing import List, Dict, Set, Tuple
 
 class LabelProcessor:
     def __init__(self):
@@ -35,8 +115,8 @@ class LabelProcessor:
             return ''
         
         # 移除特殊字符和多余空格
-        cleaned = re.sub(r'[^\w\s\-\.]', '', text.strip())
-        cleaned = re.sub(r'\s+', ' ', cleaned)
+        cleaned = re.sub(r'[^\\w\\s\\-\\.]', '', text.strip())
+        cleaned = re.sub(r'\\s+', ' ', cleaned)
         
         return cleaned.lower()
     
@@ -260,44 +340,6 @@ class LabelProcessor:
             json.dump(config, f, ensure_ascii=False, indent=2)
         
         print(f"配置已保存到: {output_path}")
-    
-    def generate_summary_report(self, config: Dict) -> str:
-        """生成处理报告"""
-        stats = config["statistics"]
-        summary = config["summary"]
-        
-        report = f"""
-# 标签数据处理报告
-
-## 处理统计
-- 总行数: {stats['total_lines']}
-- 有效行数: {stats['valid_lines']}
-- 设备类型数量: {summary['total_device_types']}
-- 厂商数量: {summary['total_manufacturers']}
-- 型号数量: {summary['total_models']}
-- 设备厂商组合: {summary['total_device_manufacturer_pairs']}
-- 厂商型号组合: {summary['total_manufacturer_model_pairs']}
-
-## 生成的中层特征
-1. **设备类型层** - {len(config['middle_features']['device_types']['extraction_rules']['keywords'])} 个设备类型
-2. **厂商层** - {len(config['middle_features']['manufacturers']['extraction_rules']['keywords'])} 个厂商
-3. **型号层** - {len(config['middle_features']['models']['extraction_rules']['keywords'])} 个型号
-4. **设备厂商组合层** - {len(config['middle_features']['device_manufacturer_combinations']['extraction_rules']['keywords'])} 个组合
-5. **厂商型号组合层** - {len(config['middle_features']['manufacturer_model_combinations']['extraction_rules']['keywords'])} 个组合
-
-## 主要设备类型 (前10个)
-{list(self.device_types)[:10]}
-
-## 主要厂商 (前10个)
-{list(self.manufacturers)[:10]}
-
-## 使用说明
-生成的配置文件可以直接用于可扩展中层特征系统，支持：
-- 从HTTP banner中提取设备类型、厂商、型号信息
-- 构建多层次知识图谱
-- 进行IoT设备识别和推理
-"""
-        return report
 
 def main():
     """主函数"""
@@ -309,7 +351,6 @@ def main():
     label_file = "../input/lable.txt"
     output_dir = "build_middle_feature_result"
     output_config = os.path.join(output_dir, "middle_features_config.json")
-    output_report = os.path.join(output_dir, "processing_report.md")
     
     # 创建处理器
     processor = LabelProcessor()
@@ -324,22 +365,88 @@ def main():
     # 保存配置
     processor.save_middle_features_config(config, output_config)
     
-    # 生成报告
-    report = processor.generate_summary_report(config)
-    # 确保报告目录存在
-    os.makedirs(output_dir, exist_ok=True)
-    with open(output_report, 'w', encoding='utf-8') as f:
-        f.write(report)
-    
-    print("\n" + "=" * 60)
+    print("\\n" + "=" * 60)
     print("处理完成！")
     print("=" * 60)
     print(f"配置文件: {output_config}")
-    print(f"处理报告: {output_report}")
+
+if __name__ == "__main__":
+    main()
+'''
+    
+    script_path = "input_demo/process_labels.py"
+    os.makedirs("input_demo", exist_ok=True)
+    
+    with open(script_path, 'w', encoding='utf-8') as f:
+        f.write(script_content)
+    
+    print(f"✅ 创建标签处理脚本: {script_path}")
+    return script_path
+
+def main():
+    """主函数"""
+    print("=" * 80)
+    print("完整的中层特征扩展和知识图谱构建演示")
+    print("=" * 80)
+    print(f"开始时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    # 步骤1: 检查必要文件
+    if not check_files_exist():
+        print("❌ 缺少必要文件，无法继续")
+        return
+    
+    # 步骤2: 创建标签处理脚本（如果不存在）
+    if not os.path.exists("input_demo/process_labels.py"):
+        create_demo_script()
+    
+    # 步骤3: 处理标签数据，生成中层特征配置
+    if not os.path.exists("input_demo/build_middle_feature_result/middle_features_config.json"):
+        success = run_command(
+            "cd input_demo && python process_labels.py",
+            "处理标签数据，生成中层特征配置"
+        )
+        if not success:
+            print("❌ 标签处理失败，无法继续")
+            return
+    else:
+        print("✅ 中层特征配置文件已存在，跳过标签处理步骤")
+    
+    # 步骤4: 构建知识图谱
+    success = run_command(
+        "python extensible_kge_builder.py",
+        "构建可扩展知识图谱"
+    )
+    if not success:
+        print("❌ 知识图谱构建失败")
+        return
+    
+    # 步骤5: 显示结果
+    print("\n" + "=" * 80)
+    print("演示完成！")
+    print("=" * 80)
+    
+    # 检查输出文件
+    output_files = [
+        "output/extensible_kge/extensible_triples.txt",
+        "output/extensible_kge/entity.vocab",
+        "output/extensible_kge/relation.vocab",
+        "output/extensible_kge/middle_layers.json",
+        "output/extensible_kge/extensible_knowledge_graph.json"
+    ]
+    
+    print("生成的文件:")
+    for file_path in output_files:
+        if os.path.exists(file_path):
+            size = os.path.getsize(file_path)
+            print(f"  ✅ {file_path} ({size} bytes)")
+        else:
+            print(f"  ❌ {file_path} (不存在)")
+    
+    print(f"\n结束时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("\n下一步:")
-    print("1. 检查生成的配置文件")
-    print("2. 将配置集成到可扩展中层特征系统")
-    print("3. 添加banner和标签的关系映射")
+    print("1. 检查生成的知识图谱文件")
+    print("2. 使用TransE等模型训练知识图谱嵌入")
+    print("3. 进行IoT设备识别推理")
 
 if __name__ == "__main__":
     main() 
